@@ -7,7 +7,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
   .factory('typeaheadParser', ['$parse', function ($parse) {
 
   //                      00000111000000000000022200000000000000003333333333333330000000000044000
-  var TYPEAHEAD_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?\s+for\s+(?:([\$\w][\$\w\d]*))\s+in\s+(.*)$/;
+  var TYPEAHEAD_REGEXP = /^\s*(.*?)(?:\s+as\s+(.*?))?\s+for\s+(?:([\$\w][\$\w\d]*))\s+in\s+(([^\|]*).*)$/;
 
   return {
     parse:function (input) {
@@ -22,6 +22,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
       return {
         itemName:match[3],
         source:$parse(match[4]),
+        fullSource:$parse(match[5]),
         viewMapper:$parse(match[2] || match[1]),
         modelMapper:$parse(match[1])
       };
@@ -178,6 +179,19 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
         }
       });
 
+      function findItem(modelValue) {
+        var src = parserResult.fullSource(originalScope, {});
+        for (var i=0; i<src.length; i++) {
+          var locals = {};
+          locals[parserResult.itemName] = src[i];
+          var model = parserResult.modelMapper(originalScope, locals);
+          if (model === modelValue) {
+            return locals[parserResult.itemName];
+          }
+        }
+        return modelValue;
+      }
+
       modelCtrl.$formatters.push(function (modelValue) {
 
         var candidateViewValue, emptyViewValue;
@@ -192,7 +206,7 @@ angular.module('ui.bootstrap.typeahead', ['ui.bootstrap.position', 'ui.bootstrap
 
           //it might happen that we don't have enough info to properly render input value
           //we need to check for this situation and simply return model value if we can't apply custom formatting
-          locals[parserResult.itemName] = modelValue;
+          locals[parserResult.itemName] = findItem(modelValue);
           candidateViewValue = parserResult.viewMapper(originalScope, locals);
           locals[parserResult.itemName] = undefined;
           emptyViewValue = parserResult.viewMapper(originalScope, locals);

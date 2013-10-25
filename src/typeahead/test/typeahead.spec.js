@@ -103,14 +103,14 @@ describe('typeahead tests', function () {
       expect(inputEl.val()).toEqual('Alaska');
     });
 
-    it('should default to bound model for initial rendering if there is not enough info to render label', function () {
+    it('should correctly render initial state if the "as" keyword is used and model is not the source object', function () {
 
       $scope.result = $scope.states[0].code;
 
       var element = prepareInputEl("<div><input ng-model='result' typeahead='state.code as state.name + state.code for state in states'></div>");
       var inputEl = findInput(element);
 
-      expect(inputEl.val()).toEqual('AL');
+      expect(inputEl.val()).toEqual('AlaskaAL');
     });
 
     it('should not get open on model change', function () {
@@ -350,7 +350,7 @@ describe('typeahead tests', function () {
       triggerKeyDown(element, 13);
 
       expect($scope.result).toEqual('AL');
-      expect(inputEl.val()).toEqual('AL');
+      expect(inputEl.val()).toEqual('Alaska');
     });
   });
 
